@@ -338,7 +338,7 @@ def create_sample_sheet(config, input_dir, output_dir):  # noqa: C901
             "tiles": config.tiles,
             "lanes": config.lanes,
             "demux_tool": demux_tool,
-            "bcl2fastq2_params": bcl2fastq2_params
+            "bcl2fastq2_params": bcl2fastq2_params,
         }
         json.dump(config_json, jsonf)
 

@@ -74,9 +74,7 @@ def undetermined_libraries(flowcell):
 
 
 @listify
-def lib_file_names(
-    library, rta_version, n_template, n_index, lane=None, seq=None, name=None
-):
+def lib_file_names(library, rta_version, n_template, n_index, lane=None, seq=None, name=None):
     """Return list with file names for the given library."""
     assert rta_version in (1, 2)
     indices = [library["barcode"] or "NoIndex"]
