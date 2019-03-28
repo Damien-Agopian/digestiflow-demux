@@ -31,6 +31,15 @@ bases_mask_illumina = return_bases_mask(planned_reads, bases_mask)
 sample_map = build_sample_map(snakemake.config["flowcell"])  # noqa
 sample_map["Undetermined"] = "S0"
 
+# Get additional bcl2fastq2 parameters
+add_params = ""
+for arg, value in snakemake.config["bcl2fastq2_params"].items():  # noqa
+    if value:
+        if isinstance("value", int):
+            add_params += " --" + arg.replace("_", "-") + " " + str(value)
+        else:
+            add_params += " --" + arg.replace("_", "-")
+
 shell(
     r"""
 set -euo pipefail
@@ -58,7 +67,7 @@ bcl2fastq \
     --interop-dir $TMPDIR/interop_dir \
     --processing-threads {bcl2fastq_threads} \
     --use-bases-mask {bases_mask_illumina} \
-    {snakemake.params.tiles_arg}
+    {add_params} {snakemake.params.tiles_arg}
 
 tree $TMPDIR/demux_out
 

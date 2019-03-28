@@ -74,12 +74,15 @@ def undetermined_libraries(flowcell):
 
 
 @listify
-def lib_file_names(library, rta_version, n_template, lane=None, seq=None, name=None):
+def lib_file_names(
+    library, rta_version, n_template, expect_index_fastq, lane=None, seq=None, name=None
+):
     """Return list with file names for the given library."""
     assert rta_version in (1, 2)
     indices = [library["barcode"] or "NoIndex"]
     reads = ["R" + str(i + 1) for i in range(n_template)]
-    # TODO add I read if keep_index_reads is True
+    if expect_index_fastq:
+        reads += "I1"
     lanes = ["L{:03d}".format(lno) for lno in library["lanes"] if lane is None or lno == lane]
     if seq is None:
         seq = ""
@@ -127,6 +130,14 @@ def get_result_files_demux(config):
     bases_mask = flowcell["demux_reads"]
     n_template = bases_mask.count("T")
     expect_undetermined = True if "B" in bases_mask else False
+    expect_index_fastq = (
+        True
+        if (
+            config["bcl2fastq2_params"]["create_fastq_for_index_reads"]
+            and config["demux_tool"] == "bcl2fastq2"
+        )
+        else False
+    )  # TODO check picard
     undetermined = undetermined_libraries(flowcell) if expect_undetermined else []
 
     for lib in flowcell["libraries"] + undetermined:
@@ -145,13 +156,13 @@ def get_result_files_demux(config):
             )
 
             if config["rta_version"] == 1 or config["demux_tool"] == "picard":
-                for fname in lib_file_names(lib, config["rta_version"], n_template, lane):
+                for fname in lib_file_names(lib, config["rta_version"], n_template, expect_index_fastq, lane):
                     yield out_prefix("{out_dir}/{fname}".format(out_dir=out_dir, fname=fname))
             else:
                 seq = sample_map.get(sample_name, "S0")
                 name = "Undetermined" if lib["barcode"] == "Undetermined" else lib["name"]
                 for fname in lib_file_names(
-                    lib, config["rta_version"], n_template, lane, seq, name
+                    lib, config["rta_version"], n_template, expect_index_fastq, lane, seq, name
                 ):
                     yield out_prefix("{out_dir}/{fname}".format(out_dir=out_dir, fname=fname))
 
